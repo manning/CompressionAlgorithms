@@ -1,8 +1,13 @@
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * @author Christopher Manning
@@ -157,7 +162,7 @@ public class IndexCompression {
    * @param inputGaps Array of gaps to be encoded.  The first numGaps are encoded.
    * @param numGaps   The number of gaps to be encoded
    * @param outputStr OutputStream to which the encoded bytes are written
-   * @throws IOException
+   * @throws java.io.IOException
    */
   public static void VBEncode(int[] inputGaps, int numGaps, OutputStream outputStr) throws IOException {
     // byte array that's large enough to hold the VB code for an integer
@@ -188,6 +193,26 @@ public class IndexCompression {
   }
 
   /**
+   * Gamma encodes all the first numGaps integers in inputGaps and writes the result
+   * to the ByteArrayOutputStream.
+   *
+   * @param inputGaps        Array of gaps to be encoded.  The first numGaps are encoded.
+   * @param numGaps          The number of gaps to be encoded.
+   * @param gammaOutputStream The BitSet to which the encoded bits are written
+   */
+  public static void gammaEncodedOutputStream(int[] inputGaps, int numGaps,
+                                              OutputStream gammaOutputStream) throws IOException {
+    BitSet bits = new BitSet();
+    int numBits = gammaEncode(inputGaps, numGaps, bits);
+    // Add an extra 1 bit (really there should be a zero terminator, we add a 1 so it's not lost in counting)
+    bits.set(numBits);
+    numBits++;
+    byte[] bytes = bits.toByteArray();
+    gammaOutputStream.write(bytes);
+  }
+
+
+  /**
    * Unary encodes all the first numGaps integers in inputGaps and writes the resulting bits to
    * the BitSet outputUnaryCodes.
    *
@@ -205,6 +230,43 @@ public class IndexCompression {
     return nextIndex;
   }
 
+  /**
+   * Unary encodes all the first numGaps integers in inputGaps and writes the result
+   * to the ByteArrayOutputStream.
+   *
+   * @param inputGaps        Array of gaps to be encoded.  The first numGaps are encoded.
+   * @param numGaps          The number of gaps to be encoded.
+   * @param unaryOutputStream The BitSet to which the encoded bits are written
+   */
+  public static void unaryEncodedOutputStream(int[] inputGaps, int numGaps,
+                                              OutputStream unaryOutputStream) throws IOException {
+    BitSet bits = new BitSet();
+    int numBits = unaryEncode(inputGaps, numGaps, bits);
+    // Add an extra 1 bit (really there should be a zero terminator, we add a 1 so it's not lost in counting)
+    bits.set(numBits);
+    numBits++;
+    byte[] bytes = bits.toByteArray();
+    unaryOutputStream.write(bytes);
+  }
+
+  /**
+   * Null encodes all the first num integers in inputs and writes the result
+   * to the ByteArrayOutputStream.
+   *
+   * @param inputs         Array of gaps to be encoded.  The first numGaps are encoded.
+   * @param num           The number of gaps to be encoded.
+   */
+  public static ByteArrayOutputStream nullEncodedOutputStream(int[] inputs, int num)
+          throws IOException {
+
+    ByteBuffer buffer = ByteBuffer.allocate(num * Integer.SIZE / Byte.SIZE);
+    IntBuffer intBuffer = buffer.asIntBuffer();
+    intBuffer.put(inputs, 0, num);
+    byte[] bytes = buffer.array();
+    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+    stream.write(bytes);
+    return stream;
+  }
 
   ////////////////////////////////////////////////////////////////////////////
   //  Unit test methods
@@ -215,10 +277,10 @@ public class IndexCompression {
     testGapEncode(false);
     testGapDecode(false);
     testVBEncodeInteger(false);
-    testVBDecodeInteger(false);
+    testVBDecodeInteger(true);
     testUnaryEncodeInteger(false);
     testUnaryDecodeInteger(false);
-    testGammaEncodeInteger(false);
+    testGammaEncodeInteger(true);
     testGammaDecodeInteger(false);
   }
 
@@ -714,39 +776,60 @@ public class IndexCompression {
 
 
   public static void runCompressionTests() throws IOException {
-    compressionTestForPostingsList(createThePostingsList(), "the");
-    compressionTestForPostingsList(createFacultyPostingsList(), "faculty");
-    compressionTestForPostingsList(createStudentPostingsList(), "student");
-    compressionTestForPostingsList(createBiologyPostingsList(), "biology");
-    compressionTestForPostingsList(createAdvancedPostingsList(), "advanced");
-    compressionTestForPostingsList(createAnthropologyPostingsList(), "anthropology");
-    compressionTestForPostingsList(CreateClassicsPostingsList(), "classics");
-    compressionTestForPostingsList(createLinguisticsPostingsList(), "linguistics");
+    System.out.println();
+    Map<String,Integer> totals = new HashMap<>();
+    compressionTestForPostingsList(createThePostingsList(), "the", totals);
+    compressionTestForPostingsList(createFacultyPostingsList(), "faculty", totals);
+    compressionTestForPostingsList(createStudentPostingsList(), "student", totals);
+    compressionTestForPostingsList(createBiologyPostingsList(), "biology", totals);
+    compressionTestForPostingsList(createAdvancedPostingsList(), "advanced", totals);
+    compressionTestForPostingsList(createAnthropologyPostingsList(), "anthropology", totals);
+    compressionTestForPostingsList(CreateClassicsPostingsList(), "classics", totals);
+    compressionTestForPostingsList(createLinguisticsPostingsList(), "linguistics", totals);
+    System.out.println();
+    System.out.println("Totals: " + totals);
   }
 
 
-  public static void compressionTestForPostingsList(int[] postingsList, String termName)
-          throws IOException {
+  public static void compressionTestForPostingsList(int[] postingsList, String termName,
+          Map<String,Integer> totals) throws IOException {
     gapEncode(postingsList);
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    VBEncode(postingsList, postingsList.length, outputStream);
-    BitSet outputBits = new BitSet();
-    int numBits = gammaEncode(postingsList, postingsList.length, outputBits);
-    System.out.print("For term \"" + termName + "\": ");
-    int postingsListSize = (postingsList.length * Integer.SIZE) / 8;
-    int vbCodeSize = outputStream.size();
-    int gammaCodeSize = (numBits % 8 == 0) ? numBits / 8 : numBits / 8 + 1;
+
+    ByteArrayOutputStream nullEncoderOutputStream =
+            nullEncodedOutputStream(postingsList, postingsList.length);
+    ByteArrayOutputStream vBOutputStream = new ByteArrayOutputStream();
+    VBEncode(postingsList, postingsList.length, vBOutputStream);
+    ByteArrayOutputStream gammaOutputStream = new ByteArrayOutputStream();
+    gammaEncodedOutputStream(postingsList, postingsList.length, gammaOutputStream);
     BitSet unaryOutputBits = new BitSet();
     int unaryNumBits = unaryEncode(postingsList, postingsList.length, unaryOutputBits);
     int unaryCodeSize = (unaryNumBits % 8 == 0) ? unaryNumBits / 8 : unaryNumBits / 8 + 1;
-    System.out.print("Postings list = " + postingsListSize + " bytes; ");
+
+    int postingsListSize = postingsList.length * Integer.SIZE / Byte.SIZE;
+    int vbCodeSize = vBOutputStream.size();
+    int gammaCodeBytes = gammaOutputStream.size();
+    System.out.print("For term \"" + termName + "\": ");
+    System.out.print("null encode = " + nullEncoderOutputStream.size() + " bytes; ");
+    incrementKey(totals, "uncompressed", postingsListSize);
     System.out.print("VB encode = " + vbCodeSize + " bytes; ");
-    System.out.print("Gamma code = " + gammaCodeSize + " bytes; ");
+    incrementKey(totals, "VB", vbCodeSize);
+    System.out.print("Gamma code = " + gammaCodeBytes + " bytes; ");
+    incrementKey(totals, "gamma", gammaCodeBytes);
     System.out.print("Unary code = " + unaryCodeSize + " bytes; ");
-    System.out.print("Bit map = " + (1000 / 8) + " bytes; ");
+    incrementKey(totals, "unary", unaryCodeSize);
+    System.out.print("Bit map = " + (1000 / Byte.SIZE) + " bytes; ");
+    incrementKey(totals, "bitmap", (1000 / Byte.SIZE));
     System.out.println();
   }
 
+  private static <K> void incrementKey(Map<K,Integer> map, K key, int num) {
+    Integer old = map.get(key);
+    if (old == null) {
+      map.put(key, num);
+    } else {
+      map.put(key, num + old);
+    }
+  }
 
   /** Main method. Runs all tests. */
   public static void main(String[] args) throws IOException {

@@ -48,6 +48,15 @@ But you can overdo it: A simple byte aligned code gains more in
 decoding speed than it loses in non-optimal compression.
 Today in class, we'll only look at size not speed though.
 
+Clone this repository for today's exercise.
+To get the code here in Eclipse, do `File|Import` choose `Git|Projects from Git`, press `Next`,
+`Clone URI` then `Next`, then enter the HTTPS URI on this page, and `Next`, `Next`, `Next`, 
+go with `Import existing projects`, `Next` and `Finish` – and you should be all ready to go!
+(The code uses the Java 7 diamond operator – if you last used Java in CS106A, then you do
+need to update to a more modern version of Eclipse. Make sure your Java language level is
+set to Java 7 or Java 8.)
+
+
 **1.**
 Look at the example code (IndexCompression.java). Towards the bottom of the file,
 it contains selected postings lists taken from the PA1 data.
