@@ -77,7 +77,7 @@ of terms of different frequencies all small.
 - What's currently there is just a null encoder that takes docIDs as int's and 
   writes bytes.
  
-There are two initial things to do:
+There are two initial things to do, and then some more if you have time.
 
 **2.**
 Write the two routines (near the top of the file) to change a postings list of 
@@ -101,20 +101,20 @@ It'd then be great for you to try to complete another compression scheme. Here's
 some things that you could try. It'd be good to have people do some different
 things.
 
-a. Unary code seems really crazy. No one suggests using just a unary code.
+  1. Unary code seems really crazy. No one suggests using just a unary code.
    But it might work okay here.  Try it. (*IIR* Section 5.3.2.) Fill in the
    routines `unaryEncodeInteger` and `unaryDecodeInteger`.  You will almost
    certainly want to know about the Java `BitSet` class for this.
    
-b. With more work, you can implement gamma codes. It requires more bit fiddling
+  1. With more work, you can implement gamma codes. It requires more bit fiddling
    with `BitSet`. Fill in the routines `gammaEncodeInteger` and
    `gammaDecodeInteger`.
    
-c. If you know some other compression scheme from somewhere else like Huffman or
+  1. If you know some other compression scheme from somewhere else like Huffman or
    Golumb codes, you could try it. (See Wikipedia or the links on the CS276
    webpage.)
 
-d. Modern work has tended to move beyond byte-aligned encodings to 
+  1. Modern work has tended to move beyond byte-aligned encodings to 
    word-aligned encodings, where you can encode several gaps in one word,
    for greater compression. Try to implement something like Simple 9
    compression, explained below. (This is a bit more complex, since you have to encode several
