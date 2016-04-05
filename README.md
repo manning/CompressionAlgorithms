@@ -142,7 +142,7 @@ encoded in binary, as: [7,16383,15]
 **Table: Simple-9 encoding options**
 
 | Selector (4 bits) | Number of coded gaps stored in a word | Length of each code in bits | Left over wasted bits |
----
+| --- | --- | --- | --- |
 | 0000 | 28 | 1 | 0 |
 | 0001 | 14 | 2 | 0 |
 | 0010 | 9 | 3 | 1 |
