@@ -53,14 +53,14 @@ Look at the example code (IndexCompression.java). Towards the bottom of the file
 it contains selected postings lists taken from the PA1 data.
 Suppose we use lists of integers for a postings list.
 
-a. How big will the postings list for *linguistics* be?
-b. How big will the postings list for *the* be?
+* How big will the postings list for *linguistics* be?
+* How big will the postings list for *the* be?
 
 Suppose we use a bitmap for whether a word is in a document (that is, bit *i*
 is 1 iff the document contains word *i* in the Dictionary).
 
-c. How big will the postings list for *the* be?
-d. How big will the postings list for *linguistics* be?
+* How big will the postings list for *the* be?
+* How big will the postings list for *linguistics* be?
 
 How many times more or less efficient is one encoding for a word of a certain
 frequency? What we want is an encoding method that can make postings lists 
