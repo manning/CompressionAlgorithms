@@ -143,7 +143,7 @@ For instance, the postings list: 16384 16400
 
 would be encoded in one 32-bit word as: 0111 01111111111111 00000000001111
 
-since the first two gaps are each less than 214 which can be decoded together 
+since the first two gaps are each less than 2^14 which can be decoded together 
 in one word. We might represent more compactly by using [ ] to delineate words, 
 and a comma to delineate individual numbers, written in decimal but to be 
 encoded in binary, as: [7,16383,15]
