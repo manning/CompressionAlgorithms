@@ -96,10 +96,10 @@ of terms of different frequencies all small.
 - What's currently there is just a null encoder that takes docIDs as int's and 
   writes bytes.
  
- ### Some reminders/teachings
+ ### Some reminders/teachings on bytes and bitwise operations
 
-You may not have every seen or used much stuff to do byte or bit level
-processing in Java. So here are a few pointers:
+You may not have ever seen or used much operations in Java for byte or bit level
+processing. So here are a few pointers.
 
 Java supports hexadecimal and binary constants: `0xFC` or `0b1100`.
 
@@ -119,7 +119,7 @@ will treat a `byte` as unsigned, e.g. `Byte.toUnsignedInt(byte)`.
 Java has bit manipulation operators basically like C, which operate on
 the primitive types. That is, you have &, |, ^, and ~ for bitwise and,
 or, xor, and binary ones complement. There are also bit shift operators: <<, >>,
-and >>> for left shift, right shift, and a zero filling right shift
+and >>> for left shift, right shift, and a zero-filling right shift
 respectively. The & operator is especially
 useful for masking (selecting out part of a byte or int and the |
 operator is especially useful for combining two numbers that each
@@ -129,12 +129,12 @@ place bytes in the right place in a number.  Something like:
 
 There are also a few other classes that are highly useful:
 
-* The `BitSet` class efficiently stores an arbitrarily size array of
+* The `BitSet` class efficiently stores an arbitrary-size array of
 bits. It's very convenient for working with bits and you can then
 output what you build as a native Java array.
 * A `byte[]` is the basic structure for having an array of bytes that
   you work with by yourself.
-* A `ByteArrayOutputStream` will allow you to write date using I/O
+* A `ByteArrayOutputStream` will allow you to write data using I/O
   methods that is written to a growable byte array. You can get that
   array at the end of writing with the `toByteArray()` method.
 * The reverse is a `ByteArrayInputStream`, which you initialize with a
