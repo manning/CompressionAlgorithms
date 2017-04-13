@@ -101,6 +101,8 @@ of terms of different frequencies all small.
 You may not have every seen or used much stuff to do byte or bit level
 processing in Java. So here are a few pointers:
 
+Java supports hexadecimal and binary constants: `0xFC` or `0b1100`.
+
 In Java, `int`, `short`, and `byte` are primitive types that take 4,
 2, and 1 byte guaranteed. You can convert an `int` into a `byte`
 simply by casting:
@@ -121,8 +123,9 @@ and >>> for left shift, right shift, and a zero filling right shift
 respectively. The & operator is especially
 useful for masking (selecting out part of a byte or int and the |
 operator is especially useful for combining two numbers that each
-store some of the bits. The bit shift operators are use with them to
-place bytes in the right place in a number.
+store some of the bits. The bit shift operators are used with them to
+place bytes in the right place in a number.  Something like:
+`b = x & 0xF | (y & 0xF << 4)`.
 
 There are also a few other classes that are highly useful:
 
@@ -181,11 +184,12 @@ things.
    word-aligned encodings, where you can encode several gaps in one word,
    for greater compression. Try to implement something like Simple 9
    compression, explained below. (This is a bit more complex, since you have to encode several
-   gaps at once, not just one.)
+   gaps at once, not just one.) Or look closely at the encodings introduced in
+   Jeff Dean's slides (referenced above) and try to implement one of them.
 
 ### Simple-9
   
-“Simple-9” is a 32-bit word-aligned encoding scheme, which packs as many gaps 
+“Simple-9” (Anh and Moffat 2005) is a 32-bit word-aligned encoding scheme, which packs as many gaps 
 as possible into a 32-bit word by allocating an equal number of bits to each, 
 and encoding a gap g as (g – 1) in binary. The first 4 bits of a 32-bit word 
 are used as a selector to indicate how many gaps are being encoded in a word, 
