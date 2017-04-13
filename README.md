@@ -1,35 +1,45 @@
 # CS276 inverted index compression exercises
 
-Think about the Spotlight index on your Mac (or the equivalent):
+Think about the Spotlight index on your Mac (or the equivalent on
+Windows or Ubuntu):
 You want it small, and mainly on-disk, but fast. Small means not only
 that it uses less of your hard disk, but it is quicker to load
 a small postings list from disk and this gives you speed.
-On my Mac, it takes about 10GB to index the ~480GB of content on my Mac,
-in a positional index. (Note: Okay, I do have some music and similar stuff on
-my Mac, but I also have a ton of text corpora, tweet collections, etc.,
-all indexed.)
+On my Mac, it takes about 12GB to index the ~500GB of content on my Mac,
+in a positional index. (Note: Okay, I do have some music and photos on
+my Mac, but I am an NLP researcher: I have over 100 GB of text
+corpora, tweet collections, etc. and lots of papers and documents, all indexed.)
 
-Google has a lot of disk space, but Google still does index compression! **Why?**
+Google has a lot of disk space (!), but Google still does index compression! **Why?**
 
-Jeff Dean will probably mention this in his talk on May 19. When Google was starting
-off they really worked hard on compressing their index, because they couldn't
-afford not to! For reasons of money, time, and lead time, they could only 
+For many years, Jeff Dean used to talk in CS276 about the large-scale
+systems issues encountered during the
+early years of Google. You can see roughly the same content in 
+[his WSDM 2009 talk](https://static.googleusercontent.com/media/research.google.com/en//people/jeff/WSDM09-keynote.pdf).
+When Google was starting
+out they really worked hard on compressing their index. They couldn't
+afford not to! For reasons of available money, query servicing speed,
+and the lead time in building out new server racks as the company grew, they could only 
 keep up with their huge rate of growth by getting better and better at 
-compressing their index. Today, things are a bit different, but the web is
-very big. The resulting enormous
-savings in the number of machines needed for index serving totally justify
+compressing their index. Their goal at one point was to improve their
+index compression by 15% a month!
+
+Today, things at Google are a bit different (they have a lot of money…), but the web is
+alos much bigger. The enormous
+savings in the number of machines needed for index serving resulting
+from compression still totally justify
 compressing the index. Moreover, it lets Google answer your queries more
-quickly, even when the index is in memory. With modern computers, the
+quickly, *even when the index is in memory or on SSDs*. With modern computers, the
 CPU and cache are so much faster than main memory (which is so much faster
 than disk) that you get more speed by using a compressed index, even though
 you have to do work decompressing it each time you search. And you can serve
 the index from less machines which reduces network latencies.
-Touching less memory/disk/machines is a big deal!
+Touching less of each of memory/disk/machines is a big deal!
 
 There are two basic families of compression methods:
 
 1. "Traditional" methods focused on bit-level representation and coding:
-   Huffman, Golumb, Gamma, Delta, Rice, ....
+   Huffman, Golumb, Gamma, Delta, Rice, ….
 2. "Byte aligned" or "word aligned" encodings, where roughly there are stretches
    of bits that you can use directly as numbers, and you mainly access them by
    masking and shifting.
@@ -86,6 +96,50 @@ of terms of different frequencies all small.
 - What's currently there is just a null encoder that takes docIDs as int's and 
   writes bytes.
  
+ ### Some reminders/teachings
+
+You may not have every seen or used much stuff to do byte or bit level
+processing in Java. So here are a few pointers:
+
+In Java, `int`, `short`, and `byte` are primitive types that take 4,
+2, and 1 byte guaranteed. You can convert an `int` into a `byte`
+simply by casting:
+```
+int a = 32;
+byte b = (byte) a;
+```
+A `byte` is just a byte, but Java (somewhat unfortunately) doesn't
+have unsigned types and by default will treat a `byte` as a signed
+twos-complement number if you convert it into something bigger or
+print it out. There are some static methods in the `Byte` class that
+will treat a `byte` as unsigned, e.g. `Byte.toUnsignedInt(byte)`.
+
+Java has bit manipulation operators basically like C, which operate on
+the primitive types. That is, you have &, |, ^, and ~ for bitwise and,
+or, xor, and binary ones complement. There are also bit shift operators: <<, >>,
+and >>> for left shift, right shift, and a zero filling right shift
+respectively. The & operator is especially
+useful for masking (selecting out part of a byte or int and the |
+operator is especially useful for combining two numbers that each
+store some of the bits. The bit shift operators are use with them to
+place bytes in the right place in a number.
+
+There are also a few other classes that are highly useful:
+
+* The `BitSet` class efficiently stores an arbitrarily size array of
+bits. It's very convenient for working with bits and you can then
+output what you build as a native Java array.
+* A `byte[]` is the basic structure for having an array of bytes that
+  you work with by yourself.
+* A `ByteArrayOutputStream` will allow you to write date using I/O
+  methods that is written to a growable byte array. You can get that
+  array at the end of writing with the `toByteArray()` method.
+* The reverse is a `ByteArrayInputStream`, which you initialize with a
+`byte[]` and then you can read bytes from it.
+
+
+### Tasks to do
+
 There are two initial things to do, and then some more if you have time.
 
 **2.**
